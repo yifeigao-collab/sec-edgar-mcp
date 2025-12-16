@@ -1,7 +1,7 @@
 import argparse
 import logging
 from mcp.server.fastmcp import FastMCP
-from sec_edgar_mcp.tools import CompanyTools, FilingsTools, FinancialTools, InsiderTools
+from sec_edgar_mcp.tools import CompanyTools, FilingsTools, FinancialTools, InsiderTools, ProxyTools
 
 # Suppress INFO logs from edgar library
 logging.getLogger("edgar").setLevel(logging.WARNING)
@@ -43,6 +43,7 @@ company_tools = CompanyTools()
 filings_tools = FilingsTools()
 financial_tools = FinancialTools()
 insider_tools = InsiderTools()
+proxy_tools = ProxyTools()
 
 
 # Company Tools
@@ -402,6 +403,59 @@ def analyze_insider_sentiment(identifier: str, months: int = 6):
     return insider_tools.analyze_insider_sentiment(identifier, months)
 
 
+# Proxy Statement Tools
+def get_proxy_statement(identifier: str, accession_number: str = None):
+    """
+    Get structured proxy statement (DEF 14A) data for a company.
+
+    Extracts executive compensation, pay vs performance metrics, and governance data
+    from the SEC's Executive Compensation Disclosure (ECD) taxonomy.
+
+    USE THIS TOOL when users ask for:
+    - Executive compensation, CEO pay, CFO salary
+    - Pay vs performance data
+    - Named executive officers (NEO) compensation
+    - Proxy statement information
+
+    CRITICAL INSTRUCTIONS FOR LLM RESPONSES:
+    - ONLY use data from the returned SEC proxy filing. NEVER add external information.
+    - ALWAYS include the filing reference information with clickable SEC URL.
+    - PRESERVE EXACT NUMERIC PRECISION - NO ROUNDING! Show exact values from filings.
+    - Note: XBRL data may not be available for Smaller Reporting Companies (SRC),
+      Emerging Growth Companies (EGC), SPACs, or funds.
+
+    Args:
+        identifier: Company ticker symbol or CIK number
+        accession_number: Optional specific filing accession number (default: latest)
+
+    Returns:
+        Dictionary containing proxy statement data including executive compensation,
+        pay vs performance metrics, and filing reference with SEC URL.
+    """
+    return proxy_tools.get_proxy_statement(identifier, accession_number)
+
+
+def get_executive_compensation(identifier: str):
+    """
+    Get executive compensation summary from the latest proxy statement (DEF 14A).
+
+    This is a convenience tool focused on executive compensation data.
+
+    USE THIS TOOL when users ask specifically about:
+    - CEO/CFO compensation
+    - Executive pay
+    - Named executive officers
+    - Total compensation packages
+
+    Args:
+        identifier: Company ticker symbol or CIK number
+
+    Returns:
+        Dictionary containing executive compensation data from the latest proxy statement.
+    """
+    return proxy_tools.get_executive_compensation(identifier)
+
+
 # Utility Tools
 def get_recommended_tools(form_type: str):
     """
@@ -454,9 +508,13 @@ def get_recommended_tools(form_type: str):
             ],
         },
         "DEF 14A": {
-            "tools": ["get_filing_content", "get_filing_sections"],
+            "tools": ["get_proxy_statement", "get_executive_compensation", "get_filing_content"],
             "description": "Proxy statement with executive compensation and governance",
-            "tips": ["Look for executive compensation tables", "Review shareholder proposals and board information"],
+            "tips": [
+                "Use get_proxy_statement for structured executive compensation data",
+                "Use get_executive_compensation for a quick compensation summary",
+                "Note: XBRL data may not be available for SRCs, EGCs, SPACs, or funds",
+            ],
         },
     }
 
@@ -501,6 +559,10 @@ def register_tools(mcp):
     mcp.add_tool(get_form4_details)
     mcp.add_tool(analyze_form4_transactions)
     mcp.add_tool(analyze_insider_sentiment)
+
+    # Proxy Statement Tools
+    mcp.add_tool(get_proxy_statement)
+    mcp.add_tool(get_executive_compensation)
 
     # Utility Tools
     mcp.add_tool(get_recommended_tools)

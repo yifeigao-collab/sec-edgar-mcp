@@ -31,6 +31,27 @@ class CompanyTools:
         try:
             company = self.client.get_company(identifier)
 
+            # Get filer category info (added in edgartools v5.3.0)
+            filer_category = None
+            is_large_accelerated = None
+            is_accelerated = None
+            is_non_accelerated = None
+            is_src = None
+            is_egc = None
+
+            try:
+                if hasattr(company, "filer_category"):
+                    fc = company.filer_category
+                    filer_category = str(fc) if fc else None
+                    is_large_accelerated = getattr(fc, "is_large_accelerated_filer", None)
+                    is_accelerated = getattr(fc, "is_accelerated_filer", None)
+                    is_non_accelerated = getattr(fc, "is_non_accelerated_filer", None)
+                    is_src = getattr(fc, "is_smaller_reporting_company", None)
+                    is_egc = getattr(fc, "is_emerging_growth_company", None)
+            except Exception:
+                # Filer category may not be available for all companies
+                pass
+
             info = CompanyInfo(
                 cik=company.cik,
                 name=company.name,
@@ -40,6 +61,12 @@ class CompanyTools:
                 exchange=getattr(company, "exchange", None),
                 state=getattr(company, "state", None),
                 fiscal_year_end=getattr(company, "fiscal_year_end", None),
+                filer_category=filer_category,
+                is_large_accelerated_filer=is_large_accelerated,
+                is_accelerated_filer=is_accelerated,
+                is_non_accelerated_filer=is_non_accelerated,
+                is_smaller_reporting_company=is_src,
+                is_emerging_growth_company=is_egc,
             )
 
             return {"success": True, "company": info.to_dict()}

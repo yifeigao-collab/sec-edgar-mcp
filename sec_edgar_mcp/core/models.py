@@ -15,6 +15,13 @@ class CompanyInfo:
     exchange: Optional[str] = None
     state: Optional[str] = None
     fiscal_year_end: Optional[str] = None
+    # Filer category fields (added in v5.3.0)
+    filer_category: Optional[str] = None
+    is_large_accelerated_filer: Optional[bool] = None
+    is_accelerated_filer: Optional[bool] = None
+    is_non_accelerated_filer: Optional[bool] = None
+    is_smaller_reporting_company: Optional[bool] = None
+    is_emerging_growth_company: Optional[bool] = None
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -27,6 +34,12 @@ class CompanyInfo:
             "exchange": self.exchange,
             "state": self.state,
             "fiscal_year_end": self.fiscal_year_end,
+            "filer_category": self.filer_category,
+            "is_large_accelerated_filer": self.is_large_accelerated_filer,
+            "is_accelerated_filer": self.is_accelerated_filer,
+            "is_non_accelerated_filer": self.is_non_accelerated_filer,
+            "is_smaller_reporting_company": self.is_smaller_reporting_company,
+            "is_emerging_growth_company": self.is_emerging_growth_company,
         }
 
 
